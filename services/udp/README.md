@@ -1,5 +1,61 @@
 # The UDP Input
 
+## A note on UDP/IP OS Buffer sizes
+
+Some OSes (most notably, Linux) place very restricive limits on the performance
+of UDP protocols. It is _highly_ recommended that you increase these OS limits to
+at least 8MB before trying to run large amounts of UDP traffic to your instance.
+8MB is just a recommendation, and should be adjusted to be inline with your
+`read-buffer` plugin setting.
+
+### Linux
+Check the current UDP/IP receive buffer limit by typing the following commands:
+
+```
+sysctl net.core.rmem_max
+```
+
+If the values are less than 8388608 bytes you should add the following lines to the /etc/sysctl.conf file:
+
+```
+net.core.rmem_max=8388608
+```
+
+Changes to /etc/sysctl.conf do not take effect until reboot.  To update the values immediately, type the following commands as root:
+
+```
+sysctl -w net.core.rmem_max=8388608
+```
+
+### BSD/Darwin
+Check the current UDP/IP buffer limit by typing the following command:
+
+```
+sysctl kern.ipc.maxsockbuf
+```
+
+If the value is less than 8388608 bytes you should add the following lines to the /etc/sysctl.conf file (create it if necessary):
+
+```
+kern.ipc.maxsockbuf=8388608
+```
+
+Changes to /etc/sysctl.conf do not take effect until reboot.  To update the values immediately, type the following commands as root:
+
+```
+sysctl -w kern.ipc.maxsockbuf=8388608
+```
+
+### Using the read-buffer option for the UDP listener
+
+The `read-buffer` option allows users to set the buffer size for the UDP listener.
+It Sets the size of the operating system's receive buffer associated with
+the UDP traffic. Keep in mind that the OS must be able
+to handle the number set here or the UDP listener will error and exit.
+
+`read-buffer = 0` means to use the OS default, which is usually too
+small for high UDP performance.
+
 ## Configuration
 
 Each UDP input allows the binding address, target database, and target retention policy to be set. If the database does not exist, it will be created automatically when the input is initialized. If the retention policy is not configured, then the default retention policy for the database is used. However if the retention policy is set, the retention policy must be explicitly created. The input will not automatically create it.
@@ -28,7 +84,7 @@ One UDP listener
   batch-size = 5000 # will flush if this many points get buffered
   batch-timeout = "1s" # will flush at least this often even if the batch-size is not reached
   batch-pending = 10 # number of batches that may be pending in memory
-  read-buffer = 8388608 # (8*1024*1024) UDP read buffer size
+  read-buffer = 0 # UDP read buffer, 0 means to use OS default
 ...
 ```
 
@@ -45,7 +101,7 @@ Multiple UDP listeners
   batch-size = 5000 # will flush if this many points get buffered
   batch-timeout = "1s" # will flush at least this often even if the batch-size is not reached
   batch-pending = 10 # number of batches that may be pending in memory
-  read-buffer = 8388608 # (8*1024*1024) UDP read buffer size
+  read-buffer = 0 # UDP read buffer size, 0 means to use OS default
 
 [[udp]]
   # High-traffic UDP
@@ -55,7 +111,7 @@ Multiple UDP listeners
   batch-size = 5000 # will flush if this many points get buffered
   batch-timeout = "1s" # will flush at least this often even if the batch-size is not reached
   batch-pending = 100 # number of batches that may be pending in memory
-  read-buffer = 33554432 # (32*1024*1024) UDP read buffer size
+  read-buffer = 8388608 # (8*1024*1024) UDP read buffer size
 ...
 ```
 

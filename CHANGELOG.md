@@ -30,6 +30,7 @@
 - [#4648](https://github.com/influxdb/influxdb/pull/4648): UDP Client (v2 client)
 - [#4690](https://github.com/influxdb/influxdb/pull/4690): SHOW SHARDS now includes database and policy. Thanks @pires
 - [#4676](https://github.com/influxdb/influxdb/pull/4676): UDP service listener performance enhancements
+- [#4681](https://github.com/influxdb/influxdb/pull/4681): Increase default buffer size for collectd and graphite listeners
 - [#4659](https://github.com/influxdb/influxdb/pull/4659): Support IF EXISTS for DROP DATABASE
 
 ### Bugfixes
