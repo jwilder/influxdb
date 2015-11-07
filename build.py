@@ -38,7 +38,7 @@ POSTINST_SCRIPT = "scripts/post-install.sh"
 POSTUNINST_SCRIPT = "scripts/post-uninstall.sh"
 LOGROTATE_SCRIPT = "scripts/logrotate"
 DEFAULT_CONFIG = "etc/config.sample.toml"
-PREINST_SCRIPT = None
+PREINST_SCRIPT = "scripts/pre-install.sh"
 
 # META-PACKAGE VARIABLES
 PACKAGE_LICENSE = "MIT"
@@ -55,6 +55,7 @@ fpm_common_args = "-f -s dir --log error \
  --vendor {} \
  --url {} \
  --after-install {} \
+ --pre-install {} \
  --license {} \
  --maintainer {} \
  --name influxdb \
@@ -64,6 +65,7 @@ fpm_common_args = "-f -s dir --log error \
     VENDOR,
     PACKAGE_URL,
     POSTINST_SCRIPT,
+    PREINST_SCRIPT,
     PACKAGE_LICENSE,
     MAINTAINER,
     CONFIG_DIR,
@@ -172,7 +174,7 @@ def check_environ(build_dir = None):
         print "\t- {} -> {}".format(v, os.environ.get(v))
     
     cwd = os.getcwd()
-    if build_dir == None and os.environ.get("GOPATH") not in cwd:
+    if build_dir == None and os.environ.get("GOPATH") and os.environ.get("GOPATH") not in cwd:
         print "\n!! WARNING: Your current directory is not under your GOPATH! This probably won't work."
 
 def check_prereqs():
@@ -360,7 +362,7 @@ def build_packages(build_output, version, rc=None):
                     if matches is not None:
                         outfile = matches.groups()[0]
                     if outfile is None:
-                        print "Could not determine output file of fpm command"
+                        print "!! Could not determine output file of package command."
                     else:
                         outfiles.append(os.path.join(current_location, outfile))
                     print "[ DONE ]"
@@ -388,7 +390,10 @@ def print_usage():
     print "\t --test \n\t\t- Run Go tests. Will not produce a build."
     print "\t --clean \n\t\t- Clean the build output directory prior to creating build."
     print ""
-        
+
+def print_package_summary(packages):
+    print packages
+    
 def main():
     # Command-line arguments
     outdir = "build"
@@ -537,6 +542,7 @@ def main():
             print "!! Cannot package without command 'fpm'. Stopping."
             sys.exit(1)
         packages = build_packages(build_output, version, rc=rc)
+        print_package_summary()
         # Optionally upload to S3
         if upload:
             upload_packages(packages)
