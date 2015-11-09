@@ -128,7 +128,7 @@ def run(command, allow_failure=False, shell=False):
         return out
 
 def create_temp_dir():
-    return tempfile.mkdtemp(prefix="influxdb-build")
+    return tempfile.mkdtemp(prefix="influxdb-build.")
 
 def get_current_version():
     command = "git describe --always --tags --abbrev=0"
@@ -377,7 +377,8 @@ def build_packages(build_output, version, nightly=False, rc=None):
                     else:
                         outfiles.append(os.path.join(current_location, outfile))
                     print "[ DONE ]"
-                    print "\tMD5={}".format(generate_md5_from_file(os.path.join(current_location, outfile)))
+                    # Display MD5 hash for generated package
+                    print "\tMD5={}".format(generate_md5_from_file(outfiles[len(outfiles)-1])
         print ""
         return outfiles
     finally:
