@@ -367,9 +367,10 @@ def build_packages(build_output, version, nightly=False, rc=None):
                     if package_type in ['zip', 'tar']:
                         if nightly:
                             name = '{}-nightly_{}_{}'.format(name, p, a)
-                    fpm_command = "fpm {} --name {} -t {} --version {} -C {} -p {} ".format(
+                    fpm_command = "fpm {} --name {} -a {} -t {} --version {} -C {} -p {} ".format(
                         fpm_common_args,
                         name,
+                        a,
                         package_type,
                         version,
                         build_root,
