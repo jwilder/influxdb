@@ -3,7 +3,7 @@
 # This is the InfluxDB build script.
 #
 # Current caveats:
-#   - Only builds ARMv6 packages and binaries currently
+#   - Does not currently build ARM builds/packages
 #   - Does not checkout the correct commit/branch (for now, you will need to do so manually)
 #   - Has external dependencies for packaging (fpm) and uploading (boto)
 #
@@ -84,7 +84,7 @@ supported_builds = {
     'darwin': [ "amd64", "386" ],
     # Windows is not currently supported in InfluxDB 0.9.5 due to use of mmap
     # 'windows': [ "amd64", "386", "arm" ],
-    'linux': [ "amd64", "386", "arm" ]
+    'linux': [ "amd64", "386" ]
 }
 supported_go = [ '1.5.1' ]
 supported_packages = {
@@ -195,7 +195,7 @@ def check_prereqs():
             print "?"
     print ""
 
-def upload_packages(packages):
+def upload_packages(packages, nightly=False):
     print "Uploading packages to S3..."
     print ""
     c = boto.connect_s3()
@@ -206,7 +206,10 @@ def upload_packages(packages):
             print "\t - Uploading {}...".format(name),
             k = Key(bucket)
             k.key = name
-            n = k.set_contents_from_filename(p,replace=False)
+            if nightly:
+                n = k.set_contents_from_filename(p, replace=True)
+            else:
+                n = k.set_contents_from_filename(p, replace=False)
             k.make_public()
             print "[ DONE ]"
         else:
@@ -311,8 +314,15 @@ def package_scripts(build_root):
     shutil.copyfile(SYSTEMD_SCRIPT, os.path.join(build_root, SCRIPT_DIR[1:], SYSTEMD_SCRIPT.split('/')[1]))
     shutil.copyfile(LOGROTATE_SCRIPT, os.path.join(build_root, SCRIPT_DIR[1:], LOGROTATE_SCRIPT.split('/')[1]))
     shutil.copyfile(DEFAULT_CONFIG, os.path.join(build_root, CONFIG_DIR[1:], DEFAULT_CONFIG.split('/')[1]))
+
+def generate_md5_from_file(path):
+    m = hashlib.md5()
+    with open(path, 'rb') as f:
+        for chunk in iter(lamdba: f.read(4096), b""):
+            m.update(chunk)
+    return m.hexdigest()
     
-def build_packages(build_output, version, rc=None):
+def build_packages(build_output, version, nightly=False, rc=None):
     outfiles = []
     tmp_build_dir = create_temp_dir()
     try:
@@ -342,7 +352,8 @@ def build_packages(build_output, version, rc=None):
                     print "\t- Packaging directory '{}' as '{}'...".format(build_root, package_type),
                     name = "influxdb"
                     if package_type in ['zip', 'tar']:
-                        name = '{}-{}_{}_{}'.format(name, version, p, a)
+                        if nightly:
+                            name = '{}-nightly_{}_{}'.format(name, p, a)
                     fpm_command = "fpm {} --name {} -t {} --version {} -C {} -p {} ".format(
                         fpm_common_args,
                         name,
@@ -366,6 +377,7 @@ def build_packages(build_output, version, rc=None):
                     else:
                         outfiles.append(os.path.join(current_location, outfile))
                     print "[ DONE ]"
+                    print "\tMD5={}".format(generate_md5_from_file(os.path.join(current_location, outfile)))
         print ""
         return outfiles
     finally:
@@ -541,11 +553,11 @@ def main():
         if not check_path_for("fpm"):
             print "!! Cannot package without command 'fpm'. Stopping."
             sys.exit(1)
-        packages = build_packages(build_output, version, rc=rc)
+        packages = build_packages(build_output, version, nightly=nightly, rc=rc)
         print_package_summary()
         # Optionally upload to S3
         if upload:
-            upload_packages(packages)
+            upload_packages(packages, nightly=nightly)
     return 0
 
 if __name__ == '__main__':
