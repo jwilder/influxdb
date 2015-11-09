@@ -291,6 +291,17 @@ def create_dir(path):
     except OSError as e:
         print e
 
+def rename_file(fr, to):
+    try:
+        os.rename(fr, to)
+    except OSError as e:
+        print e
+        # Return the original filename
+        return fr
+    else:
+        # Return the new filename
+        return to
+
 def copy_file(fr, to):
     try:
         shutil.copy(fr, to)
@@ -375,13 +386,16 @@ def build_packages(build_output, version, nightly=False, rc=None):
                     if matches is not None:
                         outfile = matches.groups()[0]
                     if outfile is None:
-                        print "!! Could not determine output file of package command."
+                        print "[ COULD NOT DETERMINE OUTPUT ]"
                     else:
+                        if nightly and package_type == 'deb':
+                            outfile = rename_file(outfile, outfile.replace("{}".format(version), "nightly"))
+                        elif nightly and package_type == 'rpm':
+                            outfile = rename_file(outfile, outfile.replace("{}-1".format(version), "nightly"))
                         outfiles.append(os.path.join(current_location, outfile))
-                    print "[ DONE ]"
-                    print outfiles
-                    # Display MD5 hash for generated package
-                    print "\t\tMD5 = {}".format(generate_md5_from_file(outfile))
+                        print "[ DONE ]"
+                        # Display MD5 hash for generated package
+                        print "\t\tMD5 = {}".format(generate_md5_from_file(outfile))
         print ""
         return outfiles
     finally:
