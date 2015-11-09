@@ -377,8 +377,9 @@ def build_packages(build_output, version, nightly=False, rc=None):
                     else:
                         outfiles.append(os.path.join(current_location, outfile))
                     print "[ DONE ]"
+                    print outfiles
                     # Display MD5 hash for generated package
-                    print "\tMD5={}".format(generate_md5_from_file(outfiles[len(outfiles)-1]))
+                    print "\tMD5={}".format(generate_md5_from_file(outfile))
         print ""
         return outfiles
     finally:
