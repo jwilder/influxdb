@@ -318,7 +318,7 @@ def package_scripts(build_root):
 def generate_md5_from_file(path):
     m = hashlib.md5()
     with open(path, 'rb') as f:
-        for chunk in iter(lamdba: f.read(4096), b""):
+        for chunk in iter(lambda: f.read(4096), b""):
             m.update(chunk)
     return m.hexdigest()
     
