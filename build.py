@@ -199,7 +199,7 @@ def upload_packages(packages, nightly=False):
     print "Uploading packages to S3..."
     print ""
     c = boto.connect_s3()
-    bucket = c.get_bucket('influxdb')
+    bucket = c.get_bucket('influxdb-nightly')
     for p in packages:
         name = os.path.basename(p)
         if bucket.get_key(name) is None:
