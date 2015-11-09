@@ -326,6 +326,8 @@ def build_packages(build_output, version, nightly=False, rc=None):
     outfiles = []
     tmp_build_dir = create_temp_dir()
     try:
+        print "-------------------------"
+        print ""
         print "Packaging..."
         for p in build_output:
             # Create top-level folder displaying which platform (linux, etc)
@@ -379,7 +381,7 @@ def build_packages(build_output, version, nightly=False, rc=None):
                     print "[ DONE ]"
                     print outfiles
                     # Display MD5 hash for generated package
-                    print "\tMD5={}".format(generate_md5_from_file(outfile))
+                    print "\t\tMD5 = {}".format(generate_md5_from_file(outfile))
         print ""
         return outfiles
     finally:
@@ -556,7 +558,7 @@ def main():
             print "!! Cannot package without command 'fpm'. Stopping."
             sys.exit(1)
         packages = build_packages(build_output, version, nightly=nightly, rc=rc)
-        print_package_summary()
+        print_package_summary(packages)
         # Optionally upload to S3
         if upload:
             upload_packages(packages, nightly=nightly)
